@@ -11,6 +11,7 @@ import AdminTeachers from './pages/admin/AdminTeachers';
 import AdminClerks from './pages/admin/AdminClerks';
 import AdminAttendance from './pages/admin/AdminAttendance';
 import AdminFees from './pages/admin/AdminFees';
+import AdminFeeAnalytics from './pages/admin/AdminFeeAnalytics';
 import AdminExams from './pages/admin/AdminExams';
 import AdminReports from './pages/admin/AdminReports';
 import AdminSettings from './pages/admin/AdminSettings';
@@ -61,6 +62,7 @@ const App = () => {
             <Route path="clerks" element={<AdminClerks />} />
             <Route path="attendance" element={<AdminAttendance />} />
             <Route path="fees" element={<AdminFees />} />
+            <Route path="fee-analytics" element={<AdminFeeAnalytics />} />
             <Route path="exams" element={<AdminExams />} />
 
             <Route path="reports" element={<AdminReports />} />
