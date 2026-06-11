@@ -17,7 +17,7 @@ import Modal from '../../components/Modal';
 import FormInput from '../../components/FormInput';
 import SelectInput from '../../components/SelectInput';
 import Button from '../../components/Button';
-import { Plus, Download, Printer, Settings, Trash2, Edit } from 'lucide-react';
+import { Plus, Download, Printer, Settings, Trash2, Edit, History } from 'lucide-react';
 import { formatCurrency } from '../../utils/helpers';
 import { exportRowsToPdf } from '../../utils/pdfExport';
 
@@ -30,6 +30,8 @@ const AdminFees = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [selectedHistoryRow, setSelectedHistoryRow] = useState(null);
   const defaultBreakdown = {
     admission: '', bdf: '', tuition: '', exam: '', computer: '', sport: '', medical: '',
     craft: '', library: '', laboratory: '', misc: '', other: '', late: '', discount: ''
@@ -233,11 +235,39 @@ const AdminFees = () => {
     { key: 'due', label: 'Due', render: (val) => <span className={val > 0 ? 'text-red-600 font-medium' : ''}>{formatCurrency(val)}</span> },
     { key: 'status', label: 'Status', render: (val) => <StatusBadge status={val} /> },
     { key: 'date', label: 'Date' },
+    { 
+      key: 'receipts', 
+      label: 'Receipt No', 
+      render: (_, row) => {
+        if (!row.paymentHistory || row.paymentHistory.length === 0) return <span className="text-slate-400">-</span>;
+        return <span className="font-medium text-slate-700 text-xs">{row.paymentHistory.map(p => `#${p.receiptNo || '?'}`).join(', ')}</span>;
+      }
+    },
     {
       key: 'actions',
-      label: 'Receipt',
+      label: 'Actions',
       render: (_, row) => (
-        <button
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              if (!row.paymentHistory || row.paymentHistory.length === 0) {
+                alert('No payments have been recorded for this student yet.');
+                return;
+              }
+              setSelectedHistoryRow(row);
+              setHistoryModalOpen(true);
+            }}
+            disabled={!row.paymentHistory || row.paymentHistory.length === 0}
+            className={`p-1.5 rounded-lg transition-colors ${
+              !row.paymentHistory || row.paymentHistory.length === 0 
+                ? 'opacity-50 cursor-not-allowed text-slate-300' 
+                : 'hover:bg-slate-100 text-blue-600'
+            }`}
+            title={!row.paymentHistory || row.paymentHistory.length === 0 ? "No payments recorded" : "View Payment History"}
+          >
+            <History className="w-4 h-4" />
+          </button>
+          <button
           onClick={async () => {
             if (!row.paid || row.paid === 0) {
               alert('No payments have been recorded for this student yet.');
@@ -266,7 +296,8 @@ const AdminFees = () => {
           title={!row.paid || row.paid === 0 ? "No payments recorded" : "Print Last Receipt"}
         >
           <Printer className="w-4 h-4" />
-        </button>
+          </button>
+        </div>
       ),
     },
   ];
@@ -292,12 +323,14 @@ const AdminFees = () => {
         { header: 'Due', key: 'dueText' },
         { header: 'Status', key: 'status' },
         { header: 'Date', key: 'date' },
+        { header: 'Receipt No', key: 'receiptText' },
       ],
       rows: filteredFees.map((row) => ({
         ...row,
         amountText: formatCurrency(row.amount),
         paidText: formatCurrency(row.paid),
         dueText: formatCurrency(row.due),
+        receiptText: (row.paymentHistory || []).map(p => `#${p.receiptNo || '?'}`).join(', ') || '-',
       })),
     });
   };
@@ -621,6 +654,65 @@ const AdminFees = () => {
         <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
           <Button variant="secondary" onClick={() => setConfigFormOpen(false)}>Cancel</Button>
           <Button onClick={handleSaveClassFee} disabled={saving}>{saving ? 'Saving...' : 'Save Structure'}</Button>
+        </div>
+      </Modal>
+
+      {/* Payment History Modal */}
+      <Modal isOpen={historyModalOpen} onClose={() => setHistoryModalOpen(false)} title={`Payment History - ${selectedHistoryRow?.studentName || ''}`}>
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+          {selectedHistoryRow?.paymentHistory && selectedHistoryRow.paymentHistory.length > 0 ? (
+            <div className="border border-slate-200 rounded-lg overflow-hidden">
+              <table className="w-full text-left text-sm text-slate-600">
+                <thead className="bg-slate-50 border-b border-slate-200 text-slate-700">
+                  <tr>
+                    <th className="px-4 py-3 font-semibold">Receipt No</th>
+                    <th className="px-4 py-3 font-semibold">Date</th>
+                    <th className="px-4 py-3 font-semibold">Mode</th>
+                    <th className="px-4 py-3 font-semibold">Amount</th>
+                    <th className="px-4 py-3 font-semibold text-center">Receipt</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {selectedHistoryRow.paymentHistory.map((payment) => (
+                    <tr key={payment._id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-4 py-3 font-medium text-slate-800">#{payment.receiptNo || '-'}</td>
+                      <td className="px-4 py-3">{new Date(payment.date).toLocaleDateString()}</td>
+                      <td className="px-4 py-3 uppercase text-xs font-semibold">{payment.mode}</td>
+                      <td className="px-4 py-3 font-medium text-emerald-600">{formatCurrency(payment.amount)}</td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={async () => {
+                            try {
+                              const html = await getFeeReceiptHtml(selectedHistoryRow.studentId, payment._id);
+                              const printWindow = window.open('', '_blank', 'width=1000,height=800');
+                              if (printWindow) {
+                                printWindow.document.open();
+                                printWindow.document.write(html);
+                                printWindow.document.close();
+                              } else {
+                                alert('Please allow popups for this site to print the receipt.');
+                              }
+                            } catch (err) {
+                              alert(err.message || 'Error generating receipt');
+                            }
+                          }}
+                          className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors inline-block"
+                          title="Print Receipt"
+                        >
+                          <Printer className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-6 text-slate-500">No payment history found.</div>
+          )}
+        </div>
+        <div className="flex justify-end mt-6 pt-4 border-t border-slate-100">
+          <Button variant="secondary" onClick={() => setHistoryModalOpen(false)}>Close</Button>
         </div>
       </Modal>
     </div>
