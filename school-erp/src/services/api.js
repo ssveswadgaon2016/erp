@@ -790,11 +790,17 @@ const mapNotice = (notice) => ({
 
 const mapExam = (exam) => ({
   id: exam?._id,
+  _id: exam?._id,
   name: exam?.name || '-',
   class: exam?.class || 'All',
+  academicYear: exam?.academicYear || '',
   startDate: toDateString(exam?.startDate),
   endDate: toDateString(exam?.endDate),
   status: exam?.status || 'Upcoming',
+  // Subject configuration and grading — needed by TeacherMarks and AdminExams
+  classSubjectConfig: exam?.classSubjectConfig || [],
+  gradingScale: exam?.gradingScale || [],
+  applicableClasses: exam?.applicableClasses || [],
 });
 
 // Prevent duplicate dashboard network calls caused by rapid remounts in development.
@@ -983,20 +989,26 @@ export const getMarksByExamAndClass = async ({ className, section, examName, sub
       },
     });
 
-    const data = unwrapResponse(response) || [];
+    const data = unwrapResponse(response) || {};
+    const marksArray = Array.isArray(data) ? data : (data.marks || []);
+    const submissionStatus = data.submissionStatus || 'Draft';
+    // NEW: subject config returned from backend (maxMarks, passMarks) for teacher UI
+    const subjectConfig = data.subjectConfig || null;
 
-    return data.map((item) => ({
+    const mappedMarks = marksArray.map((item) => ({
       id: item?._id,
-      studentId: item?.studentId?._id,
+      studentId: item?.studentId?._id || item?.studentId,
       marks: item?.marks,
       grade: item?.grade,
+      attendanceStatus: item?.attendanceStatus || 'Present',
     }));
+    return { marks: mappedMarks, submissionStatus, subjectConfig };
   } catch (error) {
     throw new Error(getErrorMessage(error, 'Unable to fetch marks.'));
   }
 };
 
-export const saveMarksBulk = async ({ className, section, examName, subjectName, entries }) => {
+export const saveMarksBulk = async ({ className, section, examName, subjectName, entries, isSubmit }) => {
   try {
     const response = await apiClient.post('/api/marks/bulk', {
       className,
@@ -1004,6 +1016,7 @@ export const saveMarksBulk = async ({ className, section, examName, subjectName,
       examName,
       subjectName,
       entries,
+      isSubmit,
     });
 
     return unwrapResponse(response);
@@ -1104,5 +1117,51 @@ export const deleteClassFee = async (id) => {
   }
 };
 
+export const getExamById = async (id) => {
+  try {
+    const response = await apiClient.get('/api/exams/' + id);
+    return unwrapResponse(response);
+  } catch (error) {
+    throw new Error(getErrorMessage(error, 'Unable to fetch exam details.'));
+  }
+};
 
+export const updateExam = async (id, data) => {
+  try {
+    const response = await apiClient.put('/api/exams/' + id, data);
+    return unwrapResponse(response);
+  } catch (error) {
+    throw new Error(getErrorMessage(error, 'Unable to update exam.'));
+  }
+};
 
+export const getClassResultSheet = async (params) => {
+  try {
+    const response = await apiClient.get('/api/marks/class-sheet', { params });
+    return unwrapResponse(response);
+  } catch (error) {
+    throw new Error(getErrorMessage(error, 'Unable to fetch class result sheet.'));
+  }
+};
+
+/**
+ * Get the subject configuration for a specific class within an exam.
+ * Returns the array of { name, maxMarks, passMarks } for that class,
+ * or an empty array if the exam has no subject config.
+ *
+ * @param {string} examId
+ * @param {string} classId
+ * @returns {Promise<Array>}
+ */
+export const getExamSubjectConfig = async (examId, classId) => {
+  try {
+    const exam = await getExamById(examId);
+    if (!exam || !Array.isArray(exam.classSubjectConfig)) return [];
+    const entry = exam.classSubjectConfig.find(
+      (c) => String(c.classId?._id || c.classId) === String(classId)
+    );
+    return entry ? entry.subjects : [];
+  } catch {
+    return [];
+  }
+};

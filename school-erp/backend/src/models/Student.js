@@ -236,6 +236,8 @@ studentSchema.set('toJSON', {
   },
 });
 
+studentSchema.index({ 'academic.class': 1, 'academic.section': 1, status: 1 });
+
 const Student = mongoose.model('Student', studentSchema);
 
 // Automatically drop the orphaned unique index on generalRegisterNumber if it exists in the DB

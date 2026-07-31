@@ -30,8 +30,8 @@
       "dest": "/favicon.ico"
     },
     {
-      "src": "/logo1.png",
-      "dest": "/logo1.png"
+      "src": "/logo.png",
+      "dest": "/logo.png"
     },
     {
       "src": "/(.*)",

@@ -54,3 +54,51 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+@media print {
+  /* Hide unnecessary elements */
+  nav, .sidebar, .sidebar-link, button:not(.print-only), header, footer, .no-print {
+    display: none !important;
+  }
+  
+  /* Reset background and layout for printing */
+  body, main, .main-content {
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: visible !important;
+  }
+  
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  
+  /* Expand tables for print */
+  .overflow-x-auto, .overflow-y-auto {
+    overflow: visible !important;
+  }
+  
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+  
+  th, td {
+    border: 1px solid #ccc !important;
+    padding: 8px !important;
+    white-space: normal !important;
+  }
+
+  /* Make sure background colors (like status badges) print correctly */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print-page-break {
+    page-break-before: always;
+  }
+}

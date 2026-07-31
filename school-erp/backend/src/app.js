@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const { rateLimit } = require('express-rate-limit');
+const compression = require('compression');
 
 const authRoutes = require('./routes/auth.routes');
 const classRoutes = require('./routes/class.routes');
@@ -100,6 +101,9 @@ app.use(cors({
 }));
 app.use(express.json({ limit: `${bodyLimitMb}mb` }));
 app.use(express.urlencoded({ extended: true, limit: `${bodyLimitMb}mb` }));
+
+// Production hardening: compress payloads
+app.use(compression());
 
 app.use('/api', globalLimiter);
 app.use('/api/auth/login', authLimiter);
