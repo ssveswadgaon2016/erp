@@ -325,10 +325,12 @@ const getStudentMarks = async (req, res) => {
 // Uses result.service.js for all calculations — no stored results.
 const getClassResultSheet = async (req, res) => {
   try {
-    const { examName, className, section } = req.query;
+    const examName = String(req.query.examName || '').trim();
+    const className = String(req.query.className || '').trim();
+    const section = String(req.query.section || 'A').trim();
 
-    if (!examName || !className || !section) {
-      const error = new Error('examName, className, and section are required');
+    if (!examName || !className) {
+      const error = new Error('examName and className are required');
       error.statusCode = 400;
       throw error;
     }

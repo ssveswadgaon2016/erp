@@ -138,7 +138,9 @@ const AdminExams = () => {
       return;
     }
 
-    const [className, section] = String(selectedResultClass).split('-');
+    const parts = String(selectedResultClass).split('-');
+    const className = parts[0];
+    const section = parts[1] || 'A';
     setResultLoading(true);
     setError('');
 
