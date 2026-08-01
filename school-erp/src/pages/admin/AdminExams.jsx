@@ -14,13 +14,13 @@ import * as XLSX from 'xlsx';
 
 // â”€â”€â”€ Default grading scale â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const DEFAULT_GRADING_SCALE = [
-  { grade: 'A+', minPercent: 90,   maxPercent: 100  },
-  { grade: 'A',  minPercent: 80,   maxPercent: 89.99 },
-  { grade: 'B+', minPercent: 70,   maxPercent: 79.99 },
-  { grade: 'B',  minPercent: 60,   maxPercent: 69.99 },
-  { grade: 'C',  minPercent: 50,   maxPercent: 59.99 },
-  { grade: 'D',  minPercent: 35,   maxPercent: 49.99 },
-  { grade: 'F',  minPercent: 0,    maxPercent: 34.99 },
+  { grade: 'A+', minPercent: 90, maxPercent: 100 },
+  { grade: 'A', minPercent: 80, maxPercent: 89.99 },
+  { grade: 'B+', minPercent: 70, maxPercent: 79.99 },
+  { grade: 'B', minPercent: 60, maxPercent: 69.99 },
+  { grade: 'C', minPercent: 50, maxPercent: 59.99 },
+  { grade: 'D', minPercent: 35, maxPercent: 49.99 },
+  { grade: 'F', minPercent: 0, maxPercent: 34.99 },
 ];
 
 // â”€â”€â”€ Grading scale validation (mirrors backend result.service.js) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -476,9 +476,9 @@ const AdminExams = () => {
               value={selectedResultYear}
               onChange={(e) => setSelectedResultYear(e.target.value)}
               options={[
-                    { value: '2025-26', label: '2025-26' },
-                    { value: '2026-27', label: '2026-27' },
-                  ]}
+                { value: '2025-26', label: '2025-26' },
+                { value: '2026-27', label: '2026-27' },
+              ]}
             />
             <SelectInput
               label="Select Exam (Published)"
