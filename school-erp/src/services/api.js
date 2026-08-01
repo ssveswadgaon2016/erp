@@ -42,6 +42,7 @@ const mapStudent = (student) => {
 
     name: student?.name || '-',
     surname: student?.surname || '',
+    rollNumber: student?.academic?.rollNumber || null,
     class: section ? `${className}-${section}` : className,
     gender: student?.gender ? `${student.gender[0].toUpperCase()}${student.gender.slice(1)}` : '-',
     phone: student?.contact || '-',

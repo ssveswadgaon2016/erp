@@ -89,7 +89,7 @@ const getMarks = async (req, res) => {
 // ─── saveMarks ─────────────────────────────────────────────────────────────
 const saveMarks = async (req, res) => {
   try {
-    const { className, examName, subjectName, entries = [], isSubmit } = req.body;
+    const { className, examName, subjectName, entries = [], rollNumbers = {}, isSubmit } = req.body;
     const section = String(req.body.section || 'A').trim();
 
     if (!className || !examName) {
@@ -236,6 +236,23 @@ const saveMarks = async (req, res) => {
       if (bulkOps.length > 0) {
         await Mark.bulkWrite(bulkOps);
       }
+      
+      // NEW: Update Roll Numbers in Student collection
+      if (Object.keys(rollNumbers).length > 0) {
+        const { Student } = require('../models/Student');
+        const rollOps = Object.keys(rollNumbers).map(studentId => {
+          let rn = rollNumbers[studentId];
+          return {
+            updateOne: {
+              filter: { _id: studentId },
+              update: { $set: { 'academic.rollNumber': rn === '' || rn === null ? null : Number(rn) } }
+            }
+          };
+        });
+        if (rollOps.length > 0) {
+          await Student.bulkWrite(rollOps);
+        }
+      }
     }
 
     // Update subjectSubmissions for all subjects involved
@@ -363,7 +380,7 @@ const getClassResultSheet = async (req, res) => {
       'academic.class': className,
       'academic.section': section,
       status: 'active',
-    }).select('name studentId generalRegisterNumber prnNumber rollNumber').lean();
+    }).select('name studentId generalRegisterNumber prnNumber academic').lean();
 
     const studentMap = {};
     students.forEach((s) => {
@@ -422,7 +439,7 @@ const getClassResultSheet = async (req, res) => {
       return {
         _id: student._id,
         name: student.name,
-        rollNumber: student.rollNumber,
+        rollNumber: student.academic?.rollNumber || null,
         prnNumber: student.prnNumber,
         studentId: student.studentId,
         subjects: student.subjects,

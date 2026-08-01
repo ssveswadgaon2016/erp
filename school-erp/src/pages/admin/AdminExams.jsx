@@ -146,8 +146,13 @@ const AdminExams = () => {
 
     try {
       const data = await getClassResultSheet({ examName: selectedResultExam, className, section });
+      const sortedResults = (data?.results || []).sort((a, b) => {
+        const rollA = a.rollNumber || Number.MAX_SAFE_INTEGER;
+        const rollB = b.rollNumber || Number.MAX_SAFE_INTEGER;
+        return rollA - rollB;
+      });
       setResultSubjects(data?.subjects || []);
-      setResultRows(data?.results || []);
+      setResultRows(sortedResults);
     } catch (err) {
       setError(err.message || 'Unable to load exam results.');
     } finally {

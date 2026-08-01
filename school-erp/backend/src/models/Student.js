@@ -140,6 +140,10 @@ const studentSchema = new mongoose.Schema(
         required: true,
         trim: true,
       },
+      rollNumber: {
+        type: Number,
+        default: null,
+      },
       admissionDate: {
         type: Date,
         required: true,

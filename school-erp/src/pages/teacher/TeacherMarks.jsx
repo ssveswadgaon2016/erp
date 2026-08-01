@@ -55,6 +55,7 @@ const TeacherMarks = () => {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [submissionStatus, setSubmissionStatus] = useState('Draft');
+  const [rollNumbers, setRollNumbers] = useState({});
 
   const [className, section] = useMemo(() => {
     const parts = String(selectedClass).split('::');
@@ -152,6 +153,11 @@ const TeacherMarks = () => {
       }
 
       setStudents(studentsData.map((student) => ({ id: student.id, name: student.name })));
+      const initialRollNumbers = {};
+      studentsData.forEach(student => {
+        initialRollNumbers[student.id] = student.rollNumber || '';
+      });
+      setRollNumbers(initialRollNumbers);
       setSubmissionStatus(backendStatus);
 
       // Map existing marks to 2D dictionaries
@@ -185,6 +191,11 @@ const TeacherMarks = () => {
   useEffect(() => { loadGrid(); }, [loadGrid]);
 
   // ─── Change Handlers ──────────────────────────────────────────────────────
+  const handleRollNumberChange = (studentId, value) => {
+    if (submissionStatus === 'Submitted' || submissionStatus === 'Approved') return;
+    setRollNumbers(prev => ({ ...prev, [studentId]: value === '' ? '' : Number(value) }));
+  };
+
   const handleMarkChange = (studentId, subjectName, value, maxMarks) => {
     if (submissionStatus === 'Submitted' || submissionStatus === 'Approved') return;
 
@@ -319,6 +330,7 @@ const TeacherMarks = () => {
         section,
         examName: selectedExam,
         entries,
+        rollNumbers,
         isSubmit,
       });
 
@@ -407,8 +419,8 @@ const TeacherMarks = () => {
               <tbody className="divide-y divide-slate-100">
                 {filteredStudents.map((student, idx) => (
                   <tr key={student.id} className="hover:bg-slate-50 transition-colors group">
-                    <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50 p-3 text-sm text-slate-600 border-r border-slate-200 font-medium shadow-[1px_0_0_0_#e2e8f0]">
-                      {idx + 1}
+                    <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50 p-2 text-sm text-slate-600 border-r border-slate-200 font-medium shadow-[1px_0_0_0_#e2e8f0]">
+                      <input type="number" min="1" value={rollNumbers[student.id] || ''} onChange={(e) => handleRollNumberChange(student.id, e.target.value)} disabled={isLocked} className="w-12 h-8 px-1 text-center border border-slate-200 rounded focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all disabled:bg-slate-50 disabled:text-slate-400" />
                     </td>
                     <td className="sticky left-16 z-10 bg-white group-hover:bg-slate-50 p-3 text-sm text-slate-800 border-r border-slate-200 font-semibold shadow-[1px_0_0_0_#e2e8f0] truncate max-w-[16rem]">
                       {student.name}
