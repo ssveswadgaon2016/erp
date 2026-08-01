@@ -359,19 +359,55 @@ const AdminExams = () => {
     return row[col.key] ?? '-';
   };
 
-  const handlePrint = () => window.print();
-
-  const handleExportCSV = () => {
+  const handleExportWord = () => {
     if (resultRows.length === 0) return;
-    const headers = resultColumns.map((col) => `"${col.label}"`).join(',');
-    const rows = resultRows.map((row) => resultColumns.map((col) => `"${getCellValue(col, row)}"`).join(','));
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers, ...rows].join('\n');
+    
+    let tableHtml = '<table border="1" style="border-collapse: collapse; width: 100%; font-size: 12px;">';
+    tableHtml += '<thead><tr>';
+    resultColumns.forEach(col => {
+      tableHtml += `<th style="background-color: #f2f2f2; padding: 5px;">${col.label}</th>`;
+    });
+    tableHtml += '</tr></thead><tbody>';
+    
+    resultRows.forEach(row => {
+      tableHtml += '<tr>';
+      resultColumns.forEach(col => {
+        tableHtml += `<td style="padding: 5px;">${getCellValue(col, row)}</td>`;
+      });
+      tableHtml += '</tr>';
+    });
+    tableHtml += '</tbody></table>';
+
+    const html = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+      <head>
+        <meta charset="utf-8">
+        <title>Result Sheet</title>
+        <style>
+          body { font-family: Arial, sans-serif; }
+          h1, h2 { text-align: center; margin: 5px 0; }
+        </style>
+      </head>
+      <body>
+        <h1>Shree Swami Vivekanand English School</h1>
+        <h2>Siddhanath Wadgaon, tq. Gangapur Dist. Chhatrapati Sambhajinagar</h2>
+        <br/>
+        <h3>Class Result Sheet</h3>
+        <p><strong>Academic Year:</strong> ${selectedResultYear} &nbsp;&nbsp;&nbsp; <strong>Exam:</strong> ${selectedResultExam} &nbsp;&nbsp;&nbsp; <strong>Class:</strong> ${selectedResultClass}</p>
+        ${tableHtml}
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob(['\\ufeff', html], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.setAttribute('href', encodeURI(csvContent));
-    link.setAttribute('download', `ResultSheet_${selectedResultClass}_${selectedResultExam}.csv`);
+    link.href = url;
+    link.download = `ResultSheet_${selectedResultClass}_${selectedResultExam}.doc`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const handleExportExcel = () => {
@@ -501,17 +537,14 @@ const AdminExams = () => {
           ) : (
             <div className="space-y-4">
               <div className="flex justify-end gap-3 no-print flex-wrap">
-                <button type="button" onClick={handlePrint} className="btn-secondary">
-                  <Printer className="w-4 h-4" /> Print
-                </button>
                 <button type="button" onClick={handleExportPDF} className="btn-secondary">
                   <FileText className="w-4 h-4" /> PDF
                 </button>
                 <button type="button" onClick={handleExportExcel} className="btn-secondary">
                   <FileSpreadsheet className="w-4 h-4" /> Excel
                 </button>
-                <button type="button" onClick={handleExportCSV} className="btn-secondary">
-                  <Download className="w-4 h-4" /> CSV
+                <button type="button" onClick={handleExportWord} className="btn-secondary">
+                  <FileText className="w-4 h-4" /> Word
                 </button>
               </div>
 
