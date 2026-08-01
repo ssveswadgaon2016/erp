@@ -343,26 +343,6 @@ const AdminExams = () => {
         return <StatusBadge status={status === 'Pass' ? 'Approved' : 'Rejected'} />;
       }
     });
-    cols.push({ key: 'totalMaxMarks', label: 'Max Marks' });
-    cols.push({ key: 'percentage', label: 'Percentage (%)' });
-    cols.push({ key: 'grade', label: 'Grade', render: (val, row) => val || row.overallGrade || '-' });
-    cols.push({
-      key: 'result',
-      label: 'Pass/Fail',
-      render: (val, row) => {
-        const status = val || row.overallStatus;
-        return <StatusBadge status={status === 'Pass' ? 'Approved' : 'Rejected'} />;
-      }
-    });
-    cols.push({
-      key: 'failedSubjects',
-      label: 'Failed Subjects',
-      render: (val) => {
-        if (!val || !Array.isArray(val) || val.length === 0) return <span className="text-slate-400 text-xs">â€”</span>;
-        return <span className="text-red-600 text-xs font-medium">{val.join(', ')}</span>;
-      }
-    });
-
     return cols;
   }, [resultSubjects, resultRows]);
 
