@@ -337,7 +337,9 @@ const AdminExams = () => {
     });
 
     cols.push({ key: 'totalObtained', label: 'Obtained Marks', render: (val, row) => val ?? row.totalMarks ?? '-' });
-
+    cols.push({ key: 'totalMaxMarks', label: 'Total Marks' });
+    cols.push({ key: 'percentage', label: 'Percentage', render: (val) => val != null ? `${Number(val).toFixed(2)}%` : '-' });
+    cols.push({ key: 'grade', label: 'Grade', render: (val, row) => val || row.overallGrade || '-' });
     return cols;
   }, [resultSubjects, resultRows]);
 
