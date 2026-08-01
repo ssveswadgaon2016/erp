@@ -331,23 +331,13 @@ const AdminExams = () => {
       const maxMarks = subject.maxMarks || null;
       cols.push({
         key: `subject_${subName}`,
-        label: subName,
+        label: maxMarks ? `${subName}(${maxMarks})` : subName,
         render: (_, row) => row.subjects?.[subName]?.marks ?? '-',
       });
     });
 
     cols.push({ key: 'totalObtained', label: 'Obtained Marks', render: (val, row) => val ?? row.totalMarks ?? '-' });
-    cols.push({ key: 'totalMaxMarks', label: 'Total Marks' });
-    cols.push({ key: 'percentage', label: 'Percentage', render: (val) => val != null ? `${Number(val).toFixed(2)}%` : '-' });
-    cols.push({ key: 'grade', label: 'Grade', render: (val, row) => val || row.overallGrade || '-' });
-    cols.push({
-      key: 'result',
-      label: 'Result',
-      render: (val, row) => {
-        const status = val || row.overallStatus;
-        return <StatusBadge status={status === 'Pass' ? 'Approved' : 'Rejected'} />;
-      }
-    });
+
     return cols;
   }, [resultSubjects, resultRows]);
 
