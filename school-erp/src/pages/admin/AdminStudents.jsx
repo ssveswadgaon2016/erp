@@ -106,17 +106,25 @@ const AdminStudents = () => {
   }, [loadStudents]);
 
   const classTabs = useMemo(() => {
-    const counts = students.reduce((accumulator, student) => {
+    let statusFiltered = students;
+    if (selectedStatus !== 'All Status') {
+      statusFiltered = students.filter((student) => String(student.status).toLowerCase() === selectedStatus.toLowerCase());
+    }
+
+    const allUniqueClasses = new Set();
+    students.forEach(s => allUniqueClasses.add(s.class || 'Unassigned'));
+
+    const counts = statusFiltered.reduce((accumulator, student) => {
       const className = student.class || 'Unassigned';
       accumulator[className] = (accumulator[className] || 0) + 1;
       return accumulator;
     }, {});
 
-    return ['All Classes', ...Object.keys(counts).sort((a, b) => a.localeCompare(b))].map((className) => ({
+    return ['All Classes', ...Array.from(allUniqueClasses).sort((a, b) => a.localeCompare(b))].map((className) => ({
       name: className,
-      count: className === 'All Classes' ? students.length : counts[className] || 0,
+      count: className === 'All Classes' ? statusFiltered.length : counts[className] || 0,
     }));
-  }, [students]);
+  }, [students, selectedStatus]);
 
   const visibleStudents = useMemo(() => {
     let filtered = students;
