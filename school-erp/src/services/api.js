@@ -1009,7 +1009,7 @@ export const getMarksByExamAndClass = async ({ className, section, examName, sub
   }
 };
 
-export const saveMarksBulk = async ({ className, section, examName, subjectName, entries, isSubmit }) => {
+export const saveMarksBulk = async ({ className, section, examName, subjectName, entries, rollNumbers, isSubmit }) => {
   try {
     const response = await apiClient.post('/api/marks/bulk', {
       className,
@@ -1017,6 +1017,7 @@ export const saveMarksBulk = async ({ className, section, examName, subjectName,
       examName,
       subjectName,
       entries,
+      rollNumbers,
       isSubmit,
     });
 
