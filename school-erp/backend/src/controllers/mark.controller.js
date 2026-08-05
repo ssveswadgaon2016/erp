@@ -308,6 +308,62 @@ const saveMarks = async (req, res) => {
   }
 };
 
+// ─── unlockSubmission ────────────────────────────────────────────────────────
+const unlockSubmission = async (req, res) => {
+  try {
+    const { className, section, examName } = req.body;
+    
+    if (!className || !examName) {
+      const error = new Error('className and examName are required');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const { Exam } = require('../models/Exam');
+    const SchoolClass = require('../models/SchoolClass');
+    
+    const exam = await Exam.findOne({ name: examName });
+    const schoolClass = await SchoolClass.findOne({ name: className }).lean();
+
+    if (!exam || !schoolClass) {
+      const error = new Error('Exam or Class not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Verify if the teacher can unlock (only if all their submissions are 'Submitted', not 'Approved')
+    let canUnlock = false;
+    let modified = false;
+
+    if (exam.subjectSubmissions && exam.subjectSubmissions.length > 0) {
+      for (const sub of exam.subjectSubmissions) {
+        if (
+          String(sub.classId) === String(schoolClass._id) &&
+          sub.section === section
+        ) {
+          if (sub.status === 'Approved') {
+             throw Object.assign(new Error('Cannot unlock because marks are already Approved by Admin'), { statusCode: 400 });
+          }
+          if (sub.status === 'Submitted') {
+            sub.status = 'Draft';
+            sub.submittedAt = null;
+            modified = true;
+          }
+        }
+      }
+    }
+
+    if (!modified) {
+      return require('../services/academic.service').sendSuccess(res, 200, 'Nothing to unlock', null);
+    }
+
+    await exam.save();
+    return require('../services/academic.service').sendSuccess(res, 200, 'Marks unlocked successfully', null);
+  } catch (error) {
+    return require('../services/academic.service').sendError(res, error);
+  }
+};
+
 // ─── getStudentMarks ───────────────────────────────────────────────────────
 const getStudentMarks = async (req, res) => {
   try {
@@ -477,4 +533,5 @@ module.exports = {
   saveMarks,
   getStudentMarks,
   getClassResultSheet,
+  unlockSubmission,
 };

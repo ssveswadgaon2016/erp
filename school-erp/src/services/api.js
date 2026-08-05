@@ -999,6 +999,7 @@ export const getMarksByExamAndClass = async ({ className, section, examName, sub
     const mappedMarks = marksArray.map((item) => ({
       id: item?._id,
       studentId: item?.studentId?._id || item?.studentId,
+      subjectName: item?.subjectName,
       marks: item?.marks,
       grade: item?.grade,
       attendanceStatus: item?.attendanceStatus || 'Present',
@@ -1024,6 +1025,20 @@ export const saveMarksBulk = async ({ className, section, examName, subjectName,
     return unwrapResponse(response);
   } catch (error) {
     throw new Error(getErrorMessage(error, 'Unable to save marks.'));
+  }
+};
+
+export const unlockMarksSubmission = async ({ className, section, examName }) => {
+  try {
+    const response = await apiClient.put('/api/marks/unlock', {
+      className,
+      section,
+      examName,
+    });
+
+    return unwrapResponse(response);
+  } catch (error) {
+    throw new Error(getErrorMessage(error, 'Unable to unlock marks.'));
   }
 };
 

@@ -10,6 +10,7 @@ import {
   getMarksByExamAndClass,
   getStudents,
   saveMarksBulk,
+  unlockMarksSubmission,
 } from '../../services/api';
 
 // ─── Grade preview using a configurable grading scale ───────────────────────
@@ -155,7 +156,7 @@ const TeacherMarks = () => {
       setStudents(studentsData.map((student) => ({ id: student.id, name: student.name })));
       const initialRollNumbers = {};
       studentsData.forEach(student => {
-        initialRollNumbers[student.id] = student.rollNumber || '';
+        initialRollNumbers[student.id] = student.rollNumber || null;
       });
       setRollNumbers(initialRollNumbers);
       setSubmissionStatus(backendStatus);
@@ -193,7 +194,7 @@ const TeacherMarks = () => {
   // ─── Change Handlers ──────────────────────────────────────────────────────
   const handleRollNumberChange = (studentId, value) => {
     if (submissionStatus === 'Submitted' || submissionStatus === 'Approved') return;
-    setRollNumbers(prev => ({ ...prev, [studentId]: value === '' ? '' : Number(value) }));
+    setRollNumbers(prev => ({ ...prev, [studentId]: value === '' ? null : Number(value) }));
   };
 
   const handleMarkChange = (studentId, subjectName, value, maxMarks) => {
@@ -344,6 +345,26 @@ const TeacherMarks = () => {
     }
   };
 
+  const handleUnlock = async () => {
+    if (!window.confirm('Are you sure you want to unlock and edit these marks?')) return;
+    
+    setSaving(true);
+    setError('');
+    
+    try {
+      await unlockMarksSubmission({
+        className,
+        section,
+        examName: selectedExam,
+      });
+      setSubmissionStatus('Draft');
+    } catch (err) {
+      setError(err.message || 'Unable to unlock marks.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const isLocked = submissionStatus === 'Submitted' || submissionStatus === 'Approved';
 
   const filteredStudents = students.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -420,7 +441,7 @@ const TeacherMarks = () => {
                 {filteredStudents.map((student, idx) => (
                   <tr key={student.id} className="hover:bg-slate-50 transition-colors group">
                     <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50 p-2 text-sm text-slate-600 border-r border-slate-200 font-medium shadow-[1px_0_0_0_#e2e8f0]">
-                      <input type="number" min="1" value={rollNumbers[student.id] || ''} onChange={(e) => handleRollNumberChange(student.id, e.target.value)} disabled={isLocked} className="w-12 h-8 px-1 text-center border border-slate-200 rounded focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all disabled:bg-slate-50 disabled:text-slate-400" />
+                      <input type="number" min="1" value={rollNumbers[student.id] ?? ''} onChange={(e) => handleRollNumberChange(student.id, e.target.value)} disabled={isLocked} className="w-12 h-8 px-1 text-center border border-slate-200 rounded focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all disabled:bg-slate-50 disabled:text-slate-400" />
                     </td>
                     <td className="sticky left-16 z-10 bg-white group-hover:bg-slate-50 p-3 text-sm text-slate-800 border-r border-slate-200 font-semibold shadow-[1px_0_0_0_#e2e8f0] truncate max-w-[16rem]">
                       {student.name}
@@ -526,6 +547,11 @@ const TeacherMarks = () => {
                 <CheckCircle className="w-4 h-4" /> {saving ? 'Submitting...' : 'Submit to Admin'}
               </Button>
             </>
+          )}
+          {isLocked && submissionStatus === 'Submitted' && (
+            <Button onClick={handleUnlock} disabled={saving} variant="primary">
+              <CheckCircle className="w-4 h-4" /> {saving ? 'Unlocking...' : 'Edit Again'}
+            </Button>
           )}
         </div>
       </div>

@@ -5,6 +5,7 @@ const {
   saveMarks,
   getStudentMarks,
   getClassResultSheet,
+  unlockSubmission,
 } = require('../controllers/mark.controller');
 const { verifyToken, allowRoles } = require('../middleware/auth.middleware');
 
@@ -14,6 +15,7 @@ router.use(verifyToken);
 
 router.get('/', allowRoles('admin', 'teacher'), getMarks);
 router.post('/bulk', allowRoles('admin', 'teacher'), saveMarks);
+router.put('/unlock', allowRoles('admin', 'teacher'), unlockSubmission);
 
 // Using verifyToken to ensure only authenticated users can access,
 // but in the future this could be made public or use a different auth for students
