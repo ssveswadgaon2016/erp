@@ -521,6 +521,15 @@ export const getFees = async () => {
   }
 };
 
+export const getPendingFeesOverview = async () => {
+  try {
+    const response = await apiClient.get('/api/fees/pending-overview');
+    return unwrapResponse(response);
+  } catch (error) {
+    throw new Error(getErrorMessage(error, 'Unable to fetch pending fees overview.'));
+  }
+};
+
 const ensureFeeStructure = async (studentId, totalAmount) => {
   try {
     await apiClient.get(`/api/fees/${studentId}`);

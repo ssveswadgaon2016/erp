@@ -20,6 +20,7 @@ const MENU_CONFIG = {
     { label: 'Clerks', path: '/admin/clerks', icon: Users },
     { label: 'Attendance', path: '/admin/attendance', icon: ClipboardCheck },
     { label: 'Fee Management', path: '/admin/fees', icon: DollarSign },
+    { label: 'Pending Fees', path: '/admin/pending-fees', icon: DollarSign },
     { label: 'Fee Analytics', path: '/admin/fee-analytics', icon: Receipt },
     { label: 'Exams & Results', path: '/admin/exams', icon: FileText },
     { label: 'TC Management', path: '/admin/tc', icon: Scroll },
