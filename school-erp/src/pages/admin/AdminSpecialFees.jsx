@@ -31,8 +31,8 @@ const AdminSpecialFees = () => {
     setLoading(true);
     setError('');
     try {
-      // Get all active students
-      const response = await getStudents({ status: 'active' });
+      // Get all active students (up to 1000 for client side filtering)
+      const response = await getStudents({ status: 'active', limit: 1000 });
       setStudents(Array.isArray(response) ? response : (response.students || []));
     } catch (err) {
       setError(err.message || 'Unable to load students.');
