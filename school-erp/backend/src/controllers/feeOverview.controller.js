@@ -51,7 +51,12 @@ const getPendingFeesOverview = async (req, res) => {
       // Determine total fee for this student based on their class
       // If there's no fee config, we default to 0
       const classKey = className.toUpperCase();
-      const totalFee = classFeeMap[classKey] || 0;
+      let totalFee = classFeeMap[classKey] || 0;
+
+      // RTE students have 0 fees
+      if (student.isRTE) {
+        totalFee = 0;
+      }
       
       const collectedFee = paymentsByStudent[String(student._id)] || 0;
       // Pending fee cannot be negative if they overpaid (though they shouldn't)
