@@ -33,7 +33,7 @@ const AdminSpecialFees = () => {
     try {
       // Get all active students
       const response = await getStudents({ status: 'active' });
-      setStudents(response.students || []);
+      setStudents(Array.isArray(response) ? response : (response.students || []));
     } catch (err) {
       setError(err.message || 'Unable to load students.');
     } finally {
@@ -44,20 +44,21 @@ const AdminSpecialFees = () => {
   const filteredStudents = useMemo(() => {
     return students.filter(student => {
       return (
-        student.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        student.studentId.toLowerCase().includes(searchQuery.toLowerCase())
+        (student.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+        (student.studentId || '').toLowerCase().includes(searchQuery.toLowerCase())
       );
     });
   }, [students, searchQuery]);
 
   const handleEdit = (student) => {
     setSelectedStudent(student);
-    const hasCustomFee = student.customFee !== null && student.customFee !== undefined;
+    const rawStudent = student.raw || student;
+    const hasCustomFee = rawStudent.customFee !== null && rawStudent.customFee !== undefined;
     
     setEnableSpecialFee(hasCustomFee);
     setForm({
-      customFee: hasCustomFee ? String(student.customFee) : '',
-      customFeeReason: student.customFeeReason || ''
+      customFee: hasCustomFee ? String(rawStudent.customFee) : '',
+      customFeeReason: rawStudent.customFeeReason || ''
     });
     setModalOpen(true);
   };
@@ -90,22 +91,26 @@ const AdminSpecialFees = () => {
     { key: 'name', label: 'Name', render: (val, row) => (
         <div>
           <div className="font-semibold text-slate-800">{val} {row.surname}</div>
-          <div className="text-xs text-slate-500">Roll No: {row.academic?.rollNumber || '-'}</div>
+          <div className="text-xs text-slate-500">Roll No: {(row.raw?.academic || row.academic)?.rollNumber || '-'}</div>
         </div>
       ) 
     },
-    { key: 'className', label: 'Class', render: (_, row) => `${row.academic?.class} ${row.academic?.section ? `- ${row.academic.section}` : ''}` },
+    { key: 'className', label: 'Class', render: (_, row) => {
+      const acad = row.raw?.academic || row.academic;
+      return `${acad?.class || row.class} ${acad?.section ? `- ${acad.section}` : ''}`;
+    } },
     { key: 'feeType', label: 'Fee Structure', render: (_, row) => {
-        if (row.isRTE) {
+        const rawStudent = row.raw || row;
+        if (rawStudent.isRTE) {
           return <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-md text-xs font-semibold">RTE (Zero Fee)</span>;
         }
-        if (row.customFee !== null && row.customFee !== undefined) {
+        if (rawStudent.customFee !== null && rawStudent.customFee !== undefined) {
           return (
             <div className="flex flex-col items-start">
               <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-md text-xs font-semibold mb-1">
-                Custom: {formatCurrency(row.customFee)}
+                Custom: {formatCurrency(rawStudent.customFee)}
               </span>
-              <span className="text-xs text-slate-500 italic">{row.customFeeReason}</span>
+              <span className="text-xs text-slate-500 italic">{rawStudent.customFeeReason}</span>
             </div>
           );
         }
@@ -172,17 +177,21 @@ const AdminSpecialFees = () => {
         icon={DollarSign}
       >
         <form onSubmit={handleSave} className="space-y-6">
-          {selectedStudent && (
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4">
-              <div className="font-semibold text-slate-800">{selectedStudent.name} {selectedStudent.surname}</div>
-              <div className="text-sm text-slate-500">{selectedStudent.studentId} | Class: {selectedStudent.academic?.class} {selectedStudent.academic?.section}</div>
-              {selectedStudent.isRTE && (
-                <div className="mt-2 text-sm text-red-600 font-medium">
-                  Note: This student is flagged as RTE. The system will force their fee to 0 regardless of custom settings.
-                </div>
-              )}
-            </div>
-          )}
+          {selectedStudent && (() => {
+            const rawSelected = selectedStudent.raw || selectedStudent;
+            const acad = rawSelected.academic || {};
+            return (
+              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4">
+                <div className="font-semibold text-slate-800">{selectedStudent.name} {selectedStudent.surname}</div>
+                <div className="text-sm text-slate-500">{selectedStudent.studentId} | Class: {acad.class} {acad.section}</div>
+                {rawSelected.isRTE && (
+                  <div className="mt-2 text-sm text-red-600 font-medium">
+                    Note: This student is flagged as RTE. The system will force their fee to 0 regardless of custom settings.
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           <div className="flex items-center gap-3 p-4 bg-indigo-50 border border-indigo-100 rounded-lg">
             <input

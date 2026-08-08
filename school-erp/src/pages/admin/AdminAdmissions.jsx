@@ -12,7 +12,7 @@ const AdminAdmissions = () => {
     class: '', phone: '', email: '', address: '', previousSchool: '', passportPhoto: '',
     caste: '', subCaste: '', religion: '', placeOfBirth: '', nationality: 'Indian', fatherEducation: '', motherEducation: '',
     surname: '', isTcIssued: false, aadhaarNumber: '', penNumber: '', isRTE: false,
-  });
+  }); 
   const [classOptions, setClassOptions] = useState([]);
   const [loadingClasses, setLoadingClasses] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -20,6 +20,7 @@ const AdminAdmissions = () => {
   const [lastStudent, setLastStudent] = useState(null);
   const [error, setError] = useState('');
 
+   
   const loadClasses = useCallback(async () => {
     setLoadingClasses(true);
     setError('');
