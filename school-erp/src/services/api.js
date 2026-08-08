@@ -253,6 +253,16 @@ export const deleteStudentById = async (id) => {
   }
 };
 
+export const updateStudentSpecialFee = async (id, payload) => {
+  try {
+    const response = await apiClient.put(`/api/students/${id}/special-fee`, payload);
+    invalidateCache('students:');
+    return unwrapResponse(response);
+  } catch (error) {
+    throw new Error(getErrorMessage(error, 'Unable to update special fee.'));
+  }
+};
+
 export const getAllStaff = async (params = {}) => {
   const queryKey = JSON.stringify(Object.entries(params).sort(([a], [b]) => a.localeCompare(b)));
 

@@ -7,7 +7,7 @@ const getPendingFeesOverview = async (req, res) => {
   try {
     // 1. Fetch all active students
     const activeStudents = await Student.find({ status: 'active' })
-      .select('studentId name surname academic isRTE')
+      .select('studentId name surname academic isRTE customFee customFeeReason')
       .lean();
 
     // 2. Fetch all ClassFee configurations
@@ -53,8 +53,11 @@ const getPendingFeesOverview = async (req, res) => {
       const classKey = className.toUpperCase();
       let totalFee = classFeeMap[classKey] || 0;
 
-      // RTE students have 0 fees
-      if (student.isRTE) {
+      // Special fee structure takes precedence
+      if (student.customFee !== null && student.customFee !== undefined) {
+        totalFee = student.customFee;
+      } else if (student.isRTE) {
+        // RTE students have 0 fees
         totalFee = 0;
       }
       
@@ -93,7 +96,9 @@ const getPendingFeesOverview = async (req, res) => {
         totalFee,
         collectedFee,
         pendingFee,
-        isRTE: student.isRTE
+        isRTE: student.isRTE,
+        customFee: student.customFee,
+        customFeeReason: student.customFeeReason,
       };
     });
 

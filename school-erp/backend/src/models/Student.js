@@ -183,6 +183,15 @@ const studentSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    customFee: {
+      type: Number,
+      default: null,
+    },
+    customFeeReason: {
+      type: String,
+      trim: true,
+      default: '',
+    },
   },
   {
     timestamps: true,

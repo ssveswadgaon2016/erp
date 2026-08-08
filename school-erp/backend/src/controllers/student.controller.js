@@ -202,10 +202,40 @@ const deleteStudent = async (req, res) => {
   }
 };
 
+const updateSpecialFee = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { customFee, customFeeReason } = req.body;
+
+    const student = await getStudentOrThrow(id);
+
+    // If customFee is explicitly null or empty string, we unset it
+    let finalCustomFee = null;
+    if (customFee !== null && customFee !== undefined && customFee !== '') {
+      finalCustomFee = Number(customFee);
+      if (Number.isNaN(finalCustomFee) || finalCustomFee < 0) {
+        const error = new Error('customFee must be a valid non-negative number');
+        error.statusCode = 400;
+        throw error;
+      }
+    }
+
+    student.customFee = finalCustomFee;
+    student.customFeeReason = customFeeReason || '';
+    
+    await student.save();
+
+    return sendSuccess(res, 200, 'Special fee updated successfully', student);
+  } catch (error) {
+    return sendError(res, error);
+  }
+};
+
 module.exports = {
   createStudent,
   getAllStudents,
   getStudentById,
   updateStudent,
   deleteStudent,
+  updateSpecialFee,
 };
